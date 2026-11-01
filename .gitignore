@@ -102,3 +102,5 @@ docs/code-review-*.md
 wrangler.d1.jsonc
 .wrangler-dryrun/
 .tmp-dryrun/
+# scripts/deploy-with-env.js 的渲染产物（含真实 database_id 等账号专属值，不入库）
+wrangler.rendered.jsonc

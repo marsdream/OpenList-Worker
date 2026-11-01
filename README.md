@@ -125,6 +125,43 @@ pnpm run deploy
 pnpm run deploy:worker
 ```
 
+#### 使用环境变量占位符部署（wrangler.jsonc 里有 `${VAR}` 时）
+
+Wrangler 4.x **不支持**在 `wrangler.jsonc` 里直接写 `${VAR}` 插值——无论从
+`.dev.vars`、`.env` 还是 shell 环境变量读取，wrangler 都会把字面量 `${VAR}`
+原样发给 Cloudflare API，D1 绑定会报：
+
+```
+binding DB of type d1 must have a valid `database_id` specified [code: 10021]
+```
+
+因此本仓库提供 `scripts/deploy-with-env.js`：它在调用 wrangler 前先把
+`wrangler.jsonc` 里的 `${占位符}` 用环境变量的值替换掉，生成
+`wrangler.rendered.jsonc`（已加入 `.gitignore`），再用渲染后的配置部署。
+这样账号专属的 `database_id` 等值只存在于本地环境变量 / CI secret 中，不进仓库。
+
+```bash
+# 方式一：命令行前置环境变量
+D1_DATABASE_ID=<你的 D1 uuid> node scripts/deploy-with-env.js
+
+# 方式二：写进 .dev.vars（本地开发用，已被 .gitignore 忽略）
+#   D1_DATABASE_ID=<你的 D1 uuid>
+#   然后：node scripts/deploy-with-env.js
+
+# 方式三：CI 中配置 secret 后同样调用该脚本
+```
+
+变量缺失时脚本会直接报错退出（不会带着字面量去部署）。CI 用法示例：
+
+```yaml
+- run: node scripts/deploy-with-env.js
+  env:
+    D1_DATABASE_ID: ${{ secrets.D1_DATABASE_ID }}
+```
+
+> 渲染产物 `wrangler.rendered.jsonc` 必须生成在**仓库根目录**——wrangler 以配置文件
+> 所在目录为基准解析 `main` / `assets.directory` 等相对路径。
+
 ---
 
 ## 技术架构

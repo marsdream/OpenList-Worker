@@ -234,7 +234,7 @@
     {
       "binding": "DB",
       "database_name": "openlist-data-base",
-      "database_id": "YOUR_D1_DATABASE_ID"
+      "database_id": "${D1_DATABASE_ID}"
     }
   ],
   //
