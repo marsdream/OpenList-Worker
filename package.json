@@ -74,7 +74,7 @@
     "build:edge": "node scripts/build-edge.mjs",
     "dev:unified": "node scripts/fetch-frontend.mjs && wrangler dev",
     "dev:worker": "wrangler dev",
-    "deploy:worker": "wrangler deploy --yes",
+    "deploy:worker": "wrangler deploy",
     "deploy": "node scripts/deploy.js",
     "build:all": "npm run build",
     "test:189": "tsx --test src/backend/drivers/189/*.test.ts",
@@ -94,7 +94,9 @@
     "sls:remove": "serverless remove",
     "prepare": "node -e \"if (require('fs').existsSync('.git')) { try { require('child_process').execSync('husky'); } catch(e) {} }\"",
     "lint": "tsc -p tsconfig.json --noEmit",
-    "format": "prettier --ignore-path .gitignore -w \"src/backend/**/*.ts\""
+    "format": "prettier --ignore-path .gitignore -w \"src/backend/**/*.ts\"",
+    "deploy:ci": "node scripts/deploy-with-env.js",
+    "build:ci": "node scripts/fetch-frontend.mjs"
   },
   "license": "AGPL-3.0",
   "devDependencies": {
