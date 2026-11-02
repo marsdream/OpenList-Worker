@@ -30,11 +30,14 @@
   "workers_dev": false,
   "preview_urls": false,
 
-  // 2026-11-01 部署到用户自有域名 openlist.277360770.xyz
+  // 自有域名路由。域名与 zone 属于账号专属信息，不写死在本仓库：
+  // 由 scripts/deploy-with-env.js 在部署前用 ${CF_HOST} / ${CF_ZONE} 环境变量渲染
+  // （wrangler 4.x 不解析配置里的 ${VAR}，必须先渲染，见该脚本注释）。
+  // 未设置这两个变量时部署会直接报错退出，不会带着字面量上线。
   "routes": [
     {
-      "pattern": "openlist.277360770.xyz/*",
-      "zone_name": "277360770.xyz"
+      "pattern": "${CF_HOST}/*",
+      "zone_name": "${CF_ZONE}"
     }
   ],
 
