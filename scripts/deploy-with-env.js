@@ -58,12 +58,72 @@ function loadDotEnv(file) {
   return out;
 }
 
-/** 从 wrangler.jsonc 文本里抠出所有 ${VAR} 占位符 */
+/**
+ * 去掉注释内容，只保留「可参与占位符解析的文本」。
+ *
+ * wrangler.jsonc 是 JSONC，允许 // 与 /* *\/ 注释。注释里如果写了
+ * `${VAR}` 这种示例（比如说明「wrangler 4.x 不解析 ${VAR}」），
+ * 直接全文正则匹配会把它误当成真占位符，导致部署报「缺少环境变量 VAR」。
+ * 因此占位符的识别与替换都只在非注释部分进行。
+ */
+function stripComments(text) {
+  let out = "";
+  let i = 0;
+  const n = text.length;
+  let inBlock = false;
+  let inString = false;
+  while (i < n) {
+    const c = text[i];
+    const next = text[i + 1];
+    if (inBlock) {
+      if (c === "*" && next === "/") {
+        inBlock = false;
+        i += 2;
+        continue;
+      }
+      i += 1;
+      continue;
+    }
+    if (inString) {
+      out += c;
+      if (c === "\\" && next !== undefined) {
+        out += next;
+        i += 2;
+        continue;
+      }
+      if (c === '"') inString = false;
+      i += 1;
+      continue;
+    }
+    if (c === '"') {
+      inString = true;
+      out += c;
+      i += 1;
+      continue;
+    }
+    if (c === "/" && next === "/") {
+      // 行注释：跳到行尾
+      while (i < n && text[i] !== "\n") i += 1;
+      continue;
+    }
+    if (c === "/" && next === "*") {
+      inBlock = true;
+      i += 2;
+      continue;
+    }
+    out += c;
+    i += 1;
+  }
+  return out;
+}
+
+/** 从 wrangler.jsonc 文本里抠出所有 ${VAR} 占位符（忽略注释里的示例） */
 function findPlaceholders(text) {
   const found = new Set();
   const re = /\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g;
+  const scannable = stripComments(text);
   let m;
-  while ((m = re.exec(text)) !== null) found.add(m[1]);
+  while ((m = re.exec(scannable)) !== null) found.add(m[1]);
   return [...found];
 }
 
